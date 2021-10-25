@@ -49,7 +49,7 @@ body {
 
 	&__form {
 		padding: 20px 10px;
-		width: 300px;
+		width: 320px;
 		background-color: teal;
 		display: flex;
 		align-items: space-around;
@@ -82,7 +82,7 @@ body {
 		& button {
 			padding: 10px 20px;
 			border-radius: 10px;
-			transition: 0.5s;	
+			transition: 0.5s;
 
 			&:hover {
 				opacity: 0.8;

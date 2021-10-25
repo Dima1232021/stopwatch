@@ -1,79 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { interval, Subject } from 'rxjs';
-import { timeInterval, filter, scan, map } from 'rxjs/operators';
+import React, { useEffect, useState, useRef } from 'react';
 import OutputTime from './Components/OutputTime';
-import Buttons from './Components/Buttons';
+import useStopwatch from './hooks/useStopwatch';
 import './Style/app.scss';
 
-let start = false;
-let stop = false;
-let wait = false;
-let reset = false;
-
-const action$ = new Subject();
-
-const Reset$ = action$.pipe(filter(val => val === 'reset')).subscribe(() => {
-	reset = true;
-	start = false;
-	wait = false;
-	stop = false;
-});
-
-const Wait$ = action$
-	.pipe(
-		timeInterval(),
-		filter(val => val.value === 'wait' && val.interval <= 300)
-	)
-	.subscribe(() => {
-		wait = true;
-	});
-
-const Stop$ = action$.pipe(filter(val => val === 'stop')).subscribe(() => {
-	start = false;
-	stop = true;
-});
-
-const Start$ = action$.pipe(filter(val => val === 'start')).subscribe(() => {
-	wait = false;
-	start = true;
-	stop = false;
-});
-
-const timer$ = interval(100).pipe(
-	scan(accTime => {
-		if (start && !wait) {
-			return accTime + 1;
-		}
-		if (stop && !wait) {
-			return (accTime = 0);
-		}
-		if (wait) {
-			return accTime;
-		}
-		if (reset) {
-			accTime = 0;
-			reset = false;
-			start = true;
-		}
-		return 0;
-	}, 0),
-	map(time => ({ time, start, wait }))
-);
-
 function App() {
+	const start = useRef();
+	const stop = useRef();
+	const wait = useRef();
+	const reset = useRef();
 	const [time, setTime] = useState({});
+	const { times } = useStopwatch(start, stop, wait, reset);
 
 	useEffect(() => {
-		const sub = timer$.subscribe(time => {
-			setTime(time);
-		});
-
-		return () => sub.unsubscribe();
-	}, []);
-
-	function action(val) {
-		return action$.next(val);
-	}
+		let typ = typeof times;
+		if (typ === 'number') {
+			setTime(times);
+		}
+	}, [times]);
 
 	return (
 		<div className='stopwatch'>
@@ -84,10 +27,21 @@ function App() {
 							<h1>Stopwatch</h1>
 						</div>
 						<div className='stopwatch__time'>
-							<OutputTime time={time.time} />
+							<OutputTime time={time} />
 						</div>
 						<div className='stopwatch__menu'>
-							<Buttons start={time.start} wait={time.wait} action={action} />
+							<button className='stopwatch__btn-start' ref={start}>
+								Start
+							</button>
+							<button className='stopwatch__btn-stop' ref={stop}>
+								Stop
+							</button>
+							<button className='stopwatch__btn-wait' ref={wait}>
+								Wait
+							</button>
+							<button className='stopwatch__btn-reset' ref={reset}>
+								Reset
+							</button>
 						</div>
 					</div>
 				</div>
